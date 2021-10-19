@@ -30,7 +30,6 @@ class TextEditor:
     self.filemenu.add_command(label="Открыть",accelerator="Ctrl+O",command=self.openfile)
     self.filemenu.add_command(label="Сохранить",accelerator="Ctrl+S",command=self.savefile)
     self.filemenu.add_command(label="Сохранить как",accelerator="Ctrl+A",command=self.saveasfile)
-    self.filemenu.add_command(label="Выход",accelerator="Ctrl+E",command=self.exit)
 
     self.menubar.add_cascade(label="Файл", menu=self.filemenu)
 
