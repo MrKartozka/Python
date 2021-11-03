@@ -6,6 +6,7 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter.font import Font, families
 from tkinter import *
 from tkinter import messagebox
+import json
 
 class TextEditor:
 
@@ -14,6 +15,7 @@ class TextEditor:
     self.root.title("Текстовый редактор")
     self.filename = None
     self.title = StringVar()
+    self.savedict = {"text" : ""}
 
     #Создание надписи пути
     self.titlebar = Label(self.root,textvariable=self.title,font=("Arial",14),bd=2,relief=GROOVE)
@@ -83,12 +85,24 @@ class TextEditor:
     try:
       self.filename = filedialog.askopenfilename(title = "Select file",filetypes = (("All Files","*.*"),("Text Files","*.txt"),("Python Files","*.py")))
       if self.filename:
-        infile = open(self.filename,"r")
+        #infile = open(self.filename,"r")
+        with open('test_file.json', 'r') as j:
+          self.savedict = json.load(j)
+        infile = self.savedict["text"]
         self.txtarea.delete("1.0",END)
         for line in infile:
           self.txtarea.insert(END,line)
-        infile.close()
+        #infile.close()
         self.settitle()
+        
+        for clr in self.savedict['colortags']:
+          if clr != ['end']:
+            self.txtarea.tag_add('color', clr[0], clr[1])
+          else:
+            break
+        self.txtarea.tag_configure('color', foreground=self.savedict['color'])
+
+
     except Exception as e:
       messagebox.showerror("Exception",e)
 
@@ -97,9 +111,12 @@ class TextEditor:
       #Проверяет на наличие имя файла
       if self.filename:
         data = self.txtarea.get("1.0",END)
-        outfile = open(self.filename,"w")
-        outfile.write(data)
-        outfile.close()
+        self.savedict["text"] = data
+        with open('test_file.json', 'w') as file:
+          json.dump(self.savedict, file)
+        #outfile = open(self.filename,"w")
+        #outfile.write(data)
+        #outfile.close()
         self.settitle()
       else:
         self.saveasfile()
@@ -156,6 +173,22 @@ class TextEditor:
     try:
         (rgb, hx) = tkinter.colorchooser.askcolor()
         self.txtarea.tag_add('color', 'sel.first', 'sel.last')
+        self.savedict['color'] = hx
+        if 'colortags' in self.savedict:
+          clrs = list(self.savedict['colortags'])
+          clrs.remove(['end'])
+          clrs.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+          clrs.append(['end'])
+          self.savedict['colortags'] = clrs
+        else:
+          clrs = []
+          clrs.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+          clrs.append(['end'])
+          self.savedict['colortags'] = clrs
+
+          #self.savedict['colortags'] = (self.txtarea.index("sel.first"), self.txtarea.index("sel.last"))
+        #self.txtarea.index("sel.first")#индекс начала тега
+        #self.txtarea.index("sel.last")#индекс конца
         self.txtarea.tag_configure('color', foreground=hx)
     except TclError:
         pass
