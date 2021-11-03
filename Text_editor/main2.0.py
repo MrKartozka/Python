@@ -94,13 +94,13 @@ class TextEditor:
           self.txtarea.insert(END,line)
         #infile.close()
         self.settitle()
-        
-        for clr in self.savedict['colortags']:
-          if clr != ['end']:
-            self.txtarea.tag_add('color', clr[0], clr[1])
-          else:
-            break
-        self.txtarea.tag_configure('color', foreground=self.savedict['color'])
+        if 'colortags' in self.savedict:
+          for clr in self.savedict['colortags']:
+            if clr != ['end']:
+              self.txtarea.tag_add('color', clr[0], clr[1])
+            else:
+              break
+          self.txtarea.tag_configure('color', foreground=self.savedict['color'])
 
 
     except Exception as e:
