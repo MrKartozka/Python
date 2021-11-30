@@ -65,26 +65,21 @@ class TextEditor:
     self.txtarea.delete("1.0",END)
     self.filename = None
     self.settitle()
+    if 'colortags' in self.savedict:
+      self.savedict.pop('colortags')
+    if 'color' in self.savedict:
+      self.savedict.pop('color')
   def openfile(self,*args): #Функция отркрытия файла
     try:
-      self.filename = filedialog.askopenfilename(title = "Select file",filetypes = (("All Files","*.*"),("Text Files","*.txt"),("Python Files","*.py")))
+      self.filename = filedialog.askopenfilename(title = "Select file",filetypes = [("Text Files","*.json")])
       if self.filename:
-        #infile = open(self.filename,"r")
-        with open('test_file.json', 'r') as j:
+        with open(self.filename, 'r') as j:
           self.savedict = json.load(j)
         infile = self.savedict["text"]
         self.txtarea.delete("1.0",END)
         for line in infile:
           self.txtarea.insert(END,line)
-        #infile.close()
         self.settitle()
-
-        for clr in self.savedict['colortags']:
-          if clr != ['end']:
-            self.txtarea.tag_add('color', clr[0], clr[1])
-          else:
-            break
-        self.txtarea.tag_configure('color', foreground=self.savedict['color'])
         if 'colortags' in self.savedict:
           for clr in self.savedict['colortags']:
             if clr != ['end']:
@@ -92,8 +87,6 @@ class TextEditor:
             else:
               break
           self.txtarea.tag_configure('color', foreground=self.savedict['color'])
-
-
     except Exception as e:
       messagebox.showerror("Exception",e)
   def savefile(self,*args): #Функция сохранить
@@ -102,11 +95,8 @@ class TextEditor:
       if self.filename:
         data = self.txtarea.get("1.0",END)
         self.savedict["text"] = data
-        with open('test_file.json', 'w') as file:
+        with open(self.filename, 'w') as file:
           json.dump(self.savedict, file)
-        #outfile = open(self.filename,"w")
-        #outfile.write(data)
-        #outfile.close()
         self.settitle()
       else:
         self.saveasfile()
@@ -115,11 +105,11 @@ class TextEditor:
   def saveasfile(self,*args): #Функция сохранить как
     #Добавление исключений
     try:
-      untitledfile = filedialog.asksaveasfilename(title = "Сохранить как",defaultextension=".txt",initialfile = "Untitled.txt",filetypes = (("All Files","*.*"),("Text Files","*.txt"),("Python Files","*.py")))
+      untitledfile = filedialog.asksaveasfilename(title = "Сохранить как",defaultextension=".json",initialfile = "Text.json",filetypes = [("Text Files","*.json")])
       data = self.txtarea.get("1.0",END)
-      outfile = open(untitledfile,"w")
-      outfile.write(data)
-      outfile.close()
+      self.savedict["text"] = data
+      with open(untitledfile, 'w') as file:
+        json.dump(self.savedict, file)
       self.filename = untitledfile
       self.settitle()
     except Exception as e:
