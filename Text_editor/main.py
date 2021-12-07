@@ -69,6 +69,14 @@ class TextEditor:
       self.savedict.pop('colortags')
     if 'color' in self.savedict:
       self.savedict.pop('color')
+    if 'bold' in self.savedict:
+      self.savedict.pop('bold')
+    if 'italic' in self.savedict:
+      self.savedict.pop('italic')
+    if 'underline' in self.savedict:
+      self.savedict.pop('underline')
+    if 'overstrike' in self.savedict:
+      self.savedict.pop('overstrike')
   def openfile(self,*args): #Функция отркрытия файла
     try:
       self.filename = filedialog.askopenfilename(title = "Select file",filetypes = [("Text Files","*.json")])
@@ -87,6 +95,45 @@ class TextEditor:
             else:
               break
           self.txtarea.tag_configure('color', foreground=self.savedict['color'])
+        if 'bg_color' in self.savedict:
+          self.txtarea.config(bg=self.savedict['bg_color'])
+        if 'bold' in self.savedict:
+          for bld in self.savedict['bold']:
+            if bld != ['end']:
+              self.txtarea.tag_add('bold', bld[0], bld[1])
+              bold_font = Font(self.txtarea, self.txtarea.cget("font"))
+              bold_font.configure(weight="bold")
+              self.txtarea.tag_configure("bold", font=bold_font)
+            else:
+              break
+        if 'italic' in self.savedict:
+          for bld in self.savedict['italic']:
+            if bld != ['end']:
+              self.txtarea.tag_add('italic', bld[0], bld[1])
+              italic_font = Font(self.txtarea, self.txtarea.cget("font"))
+              italic_font.configure(slant="italic")
+              self.txtarea.tag_configure("italic", font=italic_font)
+            else:
+              break
+        if 'underline' in self.savedict:
+          for bld in self.savedict['underline']:
+            if bld != ['end']:
+              self.txtarea.tag_add('underline', bld[0], bld[1])
+              underline_font = Font(self.txtarea, self.txtarea.cget("font"))
+              underline_font.configure(underline=1)
+              self.txtarea.tag_configure("underline", font=underline_font)
+            else:
+              break
+        if 'overstrike' in self.savedict:
+          for bld in self.savedict['overstrike']:
+            if bld != ['end']:
+              self.txtarea.tag_add('overstrike', bld[0], bld[1])
+              overstrike_font = Font(self.txtarea, self.txtarea.cget("font"))
+              overstrike_font.configure(overstrike=1)
+              self.txtarea.tag_configure("overstrike", font=overstrike_font)
+            else:
+              break
+  
     except Exception as e:
       messagebox.showerror("Exception",e)
   def savefile(self,*args): #Функция сохранить
@@ -168,16 +215,31 @@ class TextEditor:
     my_color = tkinter.colorchooser.askcolor()[1]
     if my_color:
       self.txtarea.config(bg=my_color)
+      self.savedict['bg_color'] = my_color
   def bold(self, *args):
     try:
         current_tags = self.txtarea.tag_names("sel.first")
         if "bold" in current_tags:
           self.txtarea.tag_remove("bold", "sel.first", "sel.last")
+          bl = list(self.savedict['bold'])
+          bl.remove((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+          self.savedict['bold'] = bl
         else:
           self.txtarea.tag_add("bold", "sel.first", "sel.last")
           bold_font = Font(self.txtarea, self.txtarea.cget("font"))
           bold_font.configure(weight="bold")
           self.txtarea.tag_configure("bold", font=bold_font)
+          if 'bold' in self.savedict:
+            bl = list(self.savedict['bold'])
+            bl.remove(['end'])
+            bl.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+            bl.append(['end'])
+            self.savedict['bold'] = bl
+          else:
+            bl = []
+            bl.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+            bl.append(['end'])
+            self.savedict['bold'] = bl
     except TclError:
         pass
   def italic(self, *args):
@@ -185,11 +247,25 @@ class TextEditor:
         current_tags = self.txtarea.tag_names("sel.first")
         if "italic" in current_tags:
           self.txtarea.tag_remove("italic", "sel.first", "sel.last")
+          it = list(self.savedict['italic'])
+          it.remove((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+          self.savedict['italic'] = it
         else:
           self.txtarea.tag_add("italic", "sel.first", "sel.last")
           italic_font = Font(self.txtarea, self.txtarea.cget("font"))
           italic_font.configure(slant="italic")
           self.txtarea.tag_configure("italic", font=italic_font)
+          if 'italic' in self.savedict:
+            it = list(self.savedict['italic'])
+            it.remove(['end'])
+            it.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+            it.append(['end'])
+            self.savedict['italic'] = it
+          else:
+            it = []
+            it.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+            it.append(['end'])
+            self.savedict['italic'] = it
     except TclError:
         pass
   def underline(self, *args):
@@ -197,11 +273,25 @@ class TextEditor:
         current_tags = self.txtarea.tag_names("sel.first")
         if "underline" in current_tags:
           self.txtarea.tag_remove("underline", "sel.first", "sel.last")
+          ul = list(self.savedict['underline'])
+          ul.remove((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+          self.savedict['underline'] = ul
         else:
           self.txtarea.tag_add("underline", "sel.first", "sel.last")
           underline_font = Font(self.txtarea, self.txtarea.cget("font"))
           underline_font.configure(underline=1)
           self.txtarea.tag_configure("underline", font=underline_font)
+          if 'underline' in self.savedict:
+            ul = list(self.savedict['underline'])
+            ul.remove(['end'])
+            ul.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+            ul.append(['end'])
+            self.savedict['underline'] = ul
+          else:
+            ul = []
+            ul.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+            ul.append(['end'])
+            self.savedict['underline'] = ul
     except TclError:
         pass
   def overstrike(self, *args):
@@ -209,11 +299,25 @@ class TextEditor:
         current_tags = self.txtarea.tag_names("sel.first")
         if "overstrike" in current_tags:
           self.txtarea.tag_remove("overstrike", "sel.first", "sel.last")
+          os = list(self.savedict['overstrike'])
+          os.remove((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+          self.savedict['overstrike'] = os
         else:
           self.txtarea.tag_add("overstrike", "sel.first", "sel.last")
           overstrike_font = Font(self.txtarea, self.txtarea.cget("font"))
           overstrike_font.configure(overstrike=1)
           self.txtarea.tag_configure("overstrike", font=overstrike_font)
+          if 'overstrike' in self.savedict:
+            os = list(self.savedict['overstrike'])
+            os.remove(['end'])
+            os.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+            os.append(['end'])
+            self.savedict['overstrike'] = os
+          else:
+            os = []
+            os.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
+            os.append(['end'])
+            self.savedict['overstrike'] = os
     except TclError:
         pass
   def shortcuts(self): # Определение горячих клавиш
