@@ -7,13 +7,21 @@ from tkinter.font import Font, families
 from tkinter import *
 from tkinter import messagebox
 import json
+class Hystory:
+  def __init__(self):
+    self.dict = {"text" : ""}
+
+
 class TextEditor:
   def __init__(self,root):
     self.root = root
     self.root.title("Текстовый редактор")
     self.filename = None
     self.title = StringVar()
-    self.savedict = {"text" : ""}
+    hystory = {"text" : ""}
+    self.story = list()
+    self.story.append(hystory)
+    self.num_story = 1
     #Создание надписи пути
     self.titlebar = Label(self.root,textvariable=self.title,font=("Arial",14),bd=2,relief=GROOVE)
     self.titlebar.pack(side=TOP,fill=BOTH)
@@ -29,13 +37,14 @@ class TextEditor:
     self.filemenu.add_command(label="Сохранить как",accelerator="Ctrl+A",command=self.saveasfile)
     self.menubar.add_cascade(label="Файл", menu=self.filemenu)
     self.filemenu.add_separator()
-    self.filemenu.add_command(label="Exit", accelerator="Ctrl+E", command=self.exit)
+    self.filemenu.add_command(label="Выход", accelerator="Ctrl+E", command=self.exit)
     #Создание редактора
     self.editmenu = Menu(self.menubar,font=("Arial",14),tearoff=0)
     self.editmenu.add_command(label="Вырезать",accelerator="Ctrl+X",command=self.cut)
     self.editmenu.add_command(label="Копировать",accelerator="Ctrl+C",command=self.copy)
     self.editmenu.add_command(label="Вставить",accelerator="Ctrl+V",command=self.paste)
     self.editmenu.add_command(label="Вернуть",accelerator="Ctrl+Z",command=self.undo)
+    self.editmenu.add_command(label="Повторить",accelerator="Ctrl+Y",command=self.redo)
     self.menubar.add_cascade(label="Правка", menu=self.editmenu)
     #Создание кнопки внешний вид
     self.formmenu = Menu(self.menubar, font=("Arial", 14), tearoff=0)
@@ -55,6 +64,8 @@ class TextEditor:
     #Полоса прокрутки
     scrol_y = Scrollbar(self.root,orient=VERTICAL)
     self.txtarea = Text(self.root,yscrollcommand=scrol_y.set,font=("Arial",14),state="normal",relief=GROOVE)
+    self.txtarea.bind('<Return>', self.changetext)
+    self.txtarea.bind('<space>', self.changetext)
     scrol_y.pack(side=RIGHT,fill=Y)
     scrol_y.config(command=self.txtarea.yview)
     self.txtarea.pack(fill=BOTH,expand=1)
@@ -69,74 +80,78 @@ class TextEditor:
     self.txtarea.delete("1.0",END)
     self.filename = None
     self.settitle()
-    if 'colortags' in self.savedict:
-      self.savedict.pop('colortags')
-    if 'color' in self.savedict:
-      self.savedict.pop('color')
-    if 'bold' in self.savedict:
-      self.savedict.pop('bold')
-    if 'italic' in self.savedict:
-      self.savedict.pop('italic')
-    if 'underline' in self.savedict:
-      self.savedict.pop('underline')
-    if 'overstrike' in self.savedict:
-      self.savedict.pop('overstrike')
+    if 'colortags' in self.story[0].dict:
+      self.story[0].dict.pop('colortags')
+    if 'color' in self.story[0].dict:
+      self.story[0].dict.pop('color')
+    if 'bold' in self.story[0].dict:
+      self.story[0].dict.pop('bold')
+    if 'italic' in self.story[0].dict:
+      self.story[0].dict.pop('italic')
+    if 'underline' in self.story[0].dict:
+      self.story[0].dict.pop('underline')
+    if 'overstrike' in self.story[0].dict:
+      self.story[0].dict.pop('overstrike')
+
+  def changetext(self,*args):
+    if self.num_story < 10:
+          h = self.story[-1]
+          self.story.append(h)
+          self.num_story +=1
+    else:
+          self.story.pop(0)
+          h = self.story[-1]
+          self.story.append(h)
+
+    data = self.txtarea.get("1.0",END)
+    self.story[-1].dict["text"] = data
+  
   def openfile(self,*args): #Функция отркрытия файла
     try:
       self.filename = filedialog.askopenfilename(title = "Select file",filetypes = [("Text Files","*.json")])
       if self.filename:
         with open(self.filename, 'r') as j:
-          self.savedict = json.load(j)
-        infile = self.savedict["text"]
+          self.story[0].dict = json.load(j)
+        infile = self.story[0].dict["text"]
         self.txtarea.delete("1.0",END)
         for line in infile:
           self.txtarea.insert(END,line)
         self.settitle()
-        if 'colortags' in self.savedict:
-          for clr in self.savedict['colortags']:
+        if 'colortags' in self.story[0].dict:
+          for clr in self.story[0].dict['colortags']:
             if clr != ['end']:
               self.txtarea.tag_add('color', clr[0], clr[1])
-            else:
-              break
-          self.txtarea.tag_configure('color', foreground=self.savedict['color'])
-        if 'bg_color' in self.savedict:
-          self.txtarea.config(bg=self.savedict['bg_color'])
-        if 'bold' in self.savedict:
-          for bld in self.savedict['bold']:
+          self.txtarea.tag_configure('color', foreground=self.story['color'])
+        if 'bg_color' in self.story[0].dict:
+          self.txtarea.config(bg=self.story[0].dict['bg_color'])
+        if 'bold' in self.story[0].dict:
+          for bld in self.story[0].dict['bold']:
             if bld != ['end']:
               self.txtarea.tag_add('bold', bld[0], bld[1])
               bold_font = Font(self.txtarea, self.txtarea.cget("font"))
               bold_font.configure(weight="bold")
               self.txtarea.tag_configure("bold", font=bold_font)
-            else:
-              break
-        if 'italic' in self.savedict:
-          for bld in self.savedict['italic']:
+        if 'italic' in self.story[0].dict:
+          for bld in self.story[0].dict['italic']:
             if bld != ['end']:
               self.txtarea.tag_add('italic', bld[0], bld[1])
               italic_font = Font(self.txtarea, self.txtarea.cget("font"))
               italic_font.configure(slant="italic")
               self.txtarea.tag_configure("italic", font=italic_font)
-            else:
-              break
-        if 'underline' in self.savedict:
-          for bld in self.savedict['underline']:
+        if 'underline' in self.story[0].dict:
+          for bld in self.story[0].dict['underline']:
             if bld != ['end']:
               self.txtarea.tag_add('underline', bld[0], bld[1])
               underline_font = Font(self.txtarea, self.txtarea.cget("font"))
               underline_font.configure(underline=1)
               self.txtarea.tag_configure("underline", font=underline_font)
-            else:
-              break
-        if 'overstrike' in self.savedict:
-          for bld in self.savedict['overstrike']:
+        if 'overstrike' in self.story[0].dict:
+          for bld in self.story[0].dict['overstrike']:
             if bld != ['end']:
               self.txtarea.tag_add('overstrike', bld[0], bld[1])
               overstrike_font = Font(self.txtarea, self.txtarea.cget("font"))
               overstrike_font.configure(overstrike=1)
               self.txtarea.tag_configure("overstrike", font=overstrike_font)
-            else:
-              break
     except Exception as e:
       messagebox.showerror("Exception",e)
   def savefile(self,*args): #Функция сохранить
@@ -144,9 +159,9 @@ class TextEditor:
       #Проверяет на наличие имя файла
       if self.filename:
         data = self.txtarea.get("1.0",END)
-        self.savedict["text"] = data
+        self.story[-1].dict["text"] = data
         with open(self.filename, 'w') as file:
-          json.dump(self.savedict, file)
+          json.dump(self.story[-1].dict, file)
         self.settitle()
       else:
         self.saveasfile()
@@ -157,9 +172,9 @@ class TextEditor:
     try:
       untitledfile = filedialog.asksaveasfilename(title = "Сохранить как",defaultextension=".json",initialfile = "Text.json",filetypes = [("Text Files","*.json")])
       data = self.txtarea.get("1.0",END)
-      self.savedict["text"] = data
+      self.story[-1].dict["text"] = data
       with open(untitledfile, 'w') as file:
-        json.dump(self.savedict, file)
+        json.dump(self.story[-1].dict, file)
       self.filename = untitledfile
       self.settitle()
     except Exception as e:
@@ -173,154 +188,355 @@ class TextEditor:
   def cut(self,*args): #Функция копирования
     self.txtarea.event_generate("<<Вырезать>>")
   def copy(self,*args): #Функция копировать
-          self.txtarea.event_generate("<<Копировать>>")
+    self.txtarea.event_generate("<<Копировать>>")
   def paste(self,*args): #Функция вставить
     self.txtarea.event_generate("<<Вставить>>")
-  def undo(self,*args): #Функция возврата
-    try:
-      #идёт проверка если имя файла не найдено
-      if self.filename:
-        self.txtarea.delete("1.0",END)
-        infile = open(self.filename,"r")
-        for line in infile:
+
+  def undo(self,*args):
+    #self.undo_redo(undo=True)
+    if self.num_story > 2:
+        self.num_story -= 1
+    else:
+        pass
+
+    infile = self.story[self.num_story-1].dict["text"]
+    self.txtarea.delete("1.0",END)
+    for line in infile:
           self.txtarea.insert(END,line)
-        infile.close()
-        self.settitle()
+    self.settitle()
+    #for nm in self.txtarea.tag_names:
+    self.txtarea.tag_delete(self.txtarea.tag_names)
+    if 'colortags' in self.story[self.num_story-1].dict:
+          for clr in self.story[self.num_story-1].dict['colortags']:
+            if clr != ['end']:
+              self.txtarea.tag_add('color', clr[0], clr[1])
+          self.txtarea.tag_configure('color', foreground=self.story[self.num_story-1].dict['color'])
+    if 'bg_color' in self.story[self.num_story-1].dict:
+          self.txtarea.config(bg=self.story[self.num_story-1].dict['bg_color'])
+    if 'bold' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['bold']:
+            if bld != ['end']:
+              self.txtarea.tag_add('bold', bld[0], bld[1])
+              bold_font = Font(self.txtarea, self.txtarea.cget("font"))
+              bold_font.configure(weight="bold")
+              self.txtarea.tag_configure("bold", font=bold_font)
+    if 'italic' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['italic']:
+            if bld != ['end']:
+              self.txtarea.tag_add('italic', bld[0], bld[1])
+              italic_font = Font(self.txtarea, self.txtarea.cget("font"))
+              italic_font.configure(slant="italic")
+              self.txtarea.tag_configure("italic", font=italic_font)
+    if 'underline' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['underline']:
+            if bld != ['end']:
+              self.txtarea.tag_add('underline', bld[0], bld[1])
+              underline_font = Font(self.txtarea, self.txtarea.cget("font"))
+              underline_font.configure(underline=1)
+              self.txtarea.tag_configure("underline", font=underline_font)
+    if 'overstrike' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['overstrike']:
+            if bld != ['end']:
+              self.txtarea.tag_add('overstrike', bld[0], bld[1])
+              overstrike_font = Font(self.txtarea, self.txtarea.cget("font"))
+              overstrike_font.configure(overstrike=1)
+              self.txtarea.tag_configure("overstrike", font=overstrike_font)
+
+  def redo(self,*args):
+    #self.undo_redo(undo=False)
+
+
+    if self.num_story < 10:
+        self.num_story += 1
+    else:
+        pass
+
+    infile = self.story[self.num_story-1].dict["text"]
+    self.txtarea.delete("1.0",END)
+    for line in infile:
+          self.txtarea.insert(END,line)
+    self.settitle()
+    self.txtarea.tag_delete(self.txtarea.tag_names)
+    if 'colortags' in self.story[self.num_story-1].dict:
+          for clr in self.story[self.num_story-1].dict['colortags']:
+            if clr != ['end']:
+              self.txtarea.tag_add('color', clr[0], clr[1])
+          self.txtarea.tag_configure('color', foreground=self.story[self.num_story-1].dict['color'])
+    if 'bg_color' in self.story[self.num_story-1].dict:
+          self.txtarea.config(bg=self.story[self.num_story-1].dict['bg_color'])
+    if 'bold' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['bold']:
+            if bld != ['end']:
+              self.txtarea.tag_add('bold', bld[0], bld[1])
+              bold_font = Font(self.txtarea, self.txtarea.cget("font"))
+              bold_font.configure(weight="bold")
+              self.txtarea.tag_configure("bold", font=bold_font)
+    if 'italic' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['italic']:
+            if bld != ['end']:
+              self.txtarea.tag_add('italic', bld[0], bld[1])
+              italic_font = Font(self.txtarea, self.txtarea.cget("font"))
+              italic_font.configure(slant="italic")
+              self.txtarea.tag_configure("italic", font=italic_font)
+    if 'underline' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['underline']:
+            if bld != ['end']:
+              self.txtarea.tag_add('underline', bld[0], bld[1])
+              underline_font = Font(self.txtarea, self.txtarea.cget("font"))
+              underline_font.configure(underline=1)
+              self.txtarea.tag_configure("underline", font=underline_font)
+    if 'overstrike' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['overstrike']:
+            if bld != ['end']:
+              self.txtarea.tag_add('overstrike', bld[0], bld[1])
+              overstrike_font = Font(self.txtarea, self.txtarea.cget("font"))
+              overstrike_font.configure(overstrike=1)
+              self.txtarea.tag_configure("overstrike", font=overstrike_font)
+
+
+  def undo_redo(self,*args, undo = True): #Функция возврата, повтора
+    if undo == True: #воврат
+      if self.num_story > 1:
+        self.num_story -= 1
       else:
-        self.txtarea.delete("1.0",END)
-        self.filename = None
-        self.settitle()
-    except Exception as e:
-      messagebox.showerror("Exception",e)
+        pass
+    else: #повтор
+      if self.num_story < 10:
+        self.num_story += 1
+      else:
+        pass
+
+    infile = self.story[self.num_story-1].dict["text"]
+    self.txtarea.delete("1.0",END)
+    for line in infile:
+          self.txtarea.insert(END,line)
+    self.settitle()
+    if 'colortags' in self.story[self.num_story-1].dict:
+          for clr in self.story[self.num_story-1].dict['colortags']:
+            if clr != ['end']:
+              self.txtarea.tag_add('color', clr[0], clr[1])
+          self.txtarea.tag_configure('color', foreground=self.story[self.num_story-1].dict['color'])
+    if 'bg_color' in self.story[self.num_story-1].dict:
+          self.txtarea.config(bg=self.story[self.num_story-1].dict['bg_color'])
+    if 'bold' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['bold']:
+            if bld != ['end']:
+              self.txtarea.tag_add('bold', bld[0], bld[1])
+              bold_font = Font(self.txtarea, self.txtarea.cget("font"))
+              bold_font.configure(weight="bold")
+              self.txtarea.tag_configure("bold", font=bold_font)
+    if 'italic' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['italic']:
+            if bld != ['end']:
+              self.txtarea.tag_add('italic', bld[0], bld[1])
+              italic_font = Font(self.txtarea, self.txtarea.cget("font"))
+              italic_font.configure(slant="italic")
+              self.txtarea.tag_configure("italic", font=italic_font)
+    if 'underline' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['underline']:
+            if bld != ['end']:
+              self.txtarea.tag_add('underline', bld[0], bld[1])
+              underline_font = Font(self.txtarea, self.txtarea.cget("font"))
+              underline_font.configure(underline=1)
+              self.txtarea.tag_configure("underline", font=underline_font)
+    if 'overstrike' in self.story[self.num_story-1].dict:
+          for bld in self.story[self.num_story-1].dict['overstrike']:
+            if bld != ['end']:
+              self.txtarea.tag_add('overstrike', bld[0], bld[1])
+              overstrike_font = Font(self.txtarea, self.txtarea.cget("font"))
+              overstrike_font.configure(overstrike=1)
+              self.txtarea.tag_configure("overstrike", font=overstrike_font)
+    #try:
+      #идёт проверка если имя файла не найдено
+    #   if self.filename:
+    #     self.txtarea.delete("1.0",END)
+    #     infile = open(self.filename,"r")
+    #     for line in infile:
+    #       self.txtarea.insert(END,line)
+    #     infile.close()
+    #     self.settitle()
+    #   else:
+    #     self.txtarea.delete("1.0",END)
+    #     self.filename = None
+    #     self.settitle()
+    # except Exception as e:
+    #   messagebox.showerror("Exception",e)
+
+
   def color(self):
     try:
         (rgb, hx) = tkinter.colorchooser.askcolor()
         self.txtarea.tag_add('color', 'sel.first', 'sel.last')
-        self.savedict['color'] = hx
-        if 'colortags' in self.savedict:
-          clrs = list(self.savedict['colortags'])
+        if self.num_story < 10:
+          h = self.story[-1]
+          self.story.append(h)
+          self.num_story +=1
+        else:
+          self.story.pop(0)
+          h = self.story[-1]
+          self.story.append(h)
+        self.story[-1].dict['color'] = hx
+        if 'colortags' in self.story[-1].dict:
+          clrs = list(self.story[-1].dict['colortags'])
           clrs.remove(['end'])
           clrs.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
           clrs.append(['end'])
-          self.savedict['colortags'] = clrs
+          self.story[-1].dict['colortags'] = clrs
         else:
           clrs = []
           clrs.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
           clrs.append(['end'])
-          self.savedict['colortags'] = clrs
-          #self.savedict['colortags'] = (self.txtarea.index("sel.first"), self.txtarea.index("sel.last"))
-        #self.txtarea.index("sel.first")#индекс начала тега
-        #self.txtarea.index("sel.last")#индекс конца
+          self.story[-1].dict['colortags'] = clrs
         self.txtarea.tag_configure('color', foreground=hx)
     except TclError:
         pass
   def bg_color(self):
     my_color = tkinter.colorchooser.askcolor()[1]
+    if self.num_story < 10:
+          h = self.story[-1]
+          self.story.append(h)
+          self.num_story +=1
+    else:
+          self.story.pop(0)
+          h = self.story[-1]
+          self.story.append(h)
     if my_color:
       self.txtarea.config(bg=my_color)
-      self.savedict['bg_color'] = my_color
+      self.story[-1].dict['bg_color'] = my_color
   def bold(self, *args):
     try:
         current_tags = self.txtarea.tag_names("sel.first")
+        if self.num_story < 10:
+          h = self.story[-1]
+          self.story.append(h)
+          self.num_story +=1
+        else:
+          self.story.pop(0)
+          h = self.story[-1]
+          self.story.append(h)
         if "bold" in current_tags:
           self.txtarea.tag_remove("bold", "sel.first", "sel.last")
-          bl = list(self.savedict['bold'])
+          bl = list(self.story[-1].dict['bold'])
           bl.remove((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
-          self.savedict['bold'] = bl
+          self.story['bold'] = bl
         else:
           self.txtarea.tag_add("bold", "sel.first", "sel.last")
           bold_font = Font(self.txtarea, self.txtarea.cget("font"))
           bold_font.configure(weight="bold")
           self.txtarea.tag_configure("bold", font=bold_font)
-          if 'bold' in self.savedict:
-            bl = list(self.savedict['bold'])
+          if 'bold' in self.story[-1].dict:
+            bl = list(self.story[-1].dict['bold'])
             bl.remove(['end'])
             bl.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
             bl.append(['end'])
-            self.savedict['bold'] = bl
+            self.story[-1].dict['bold'] = bl
           else:
             bl = []
             bl.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
             bl.append(['end'])
-            self.savedict['bold'] = bl
+            self.story[-1].dict['bold'] = bl
     except TclError:
         pass
   def italic(self, *args):
     try:
         current_tags = self.txtarea.tag_names("sel.first")
+        if self.num_story < 10:
+          h = self.story[-1]
+          self.story.append(h)
+          self.num_story +=1
+        else:
+          self.story.pop(0)
+          h = self.story[-1]
+          self.story.append(h)
         if "italic" in current_tags:
           self.txtarea.tag_remove("italic", "sel.first", "sel.last")
-          it = list(self.savedict['italic'])
+          it = list(self.story[-1].dict['italic'])
           it.remove((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
-          self.savedict['italic'] = it
+          self.story['italic'] = it
         else:
           self.txtarea.tag_add("italic", "sel.first", "sel.last")
           italic_font = Font(self.txtarea, self.txtarea.cget("font"))
           italic_font.configure(slant="italic")
           self.txtarea.tag_configure("italic", font=italic_font)
-          if 'italic' in self.savedict:
-            it = list(self.savedict['italic'])
+          if 'italic' in self.story[-1].dict:
+            it = list(self.story['italic'])
             it.remove(['end'])
             it.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
             it.append(['end'])
-            self.savedict['italic'] = it
+            self.story[-1].dict['italic'] = it
           else:
             it = []
             it.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
             it.append(['end'])
-            self.savedict['italic'] = it
+            self.story[-1].dict['italic'] = it
     except TclError:
         pass
   def underline(self, *args):
     try:
         current_tags = self.txtarea.tag_names("sel.first")
+        if self.num_story < 10:
+          h = self.story[-1]
+          self.story.append(h)
+          self.num_story +=1
+        else:
+          self.story.pop(0)
+          h = self.story[-1]
+          self.story.append(h)
         if "underline" in current_tags:
           self.txtarea.tag_remove("underline", "sel.first", "sel.last")
-          ul = list(self.savedict['underline'])
+          ul = list(self.story[-1].dict['underline'])
           ul.remove((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
-          self.savedict['underline'] = ul
+          self.story[-1].dict['underline'] = ul
         else:
           self.txtarea.tag_add("underline", "sel.first", "sel.last")
           underline_font = Font(self.txtarea, self.txtarea.cget("font"))
           underline_font.configure(underline=1)
           self.txtarea.tag_configure("underline", font=underline_font)
-          if 'underline' in self.savedict:
-            ul = list(self.savedict['underline'])
+          if 'underline' in self.story[-1].dict:
+            ul = list(self.story[-1].dict['underline'])
             ul.remove(['end'])
             ul.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
             ul.append(['end'])
-            self.savedict['underline'] = ul
+            self.story[-1].dict['underline'] = ul
           else:
             ul = []
             ul.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
             ul.append(['end'])
-            self.savedict['underline'] = ul
+            self.story[-1].dict['underline'] = ul
     except TclError:
         pass
   def overstrike(self, *args):
     try:
         current_tags = self.txtarea.tag_names("sel.first")
+        if self.num_story < 10:
+          h = self.story[-1]
+          self.story.append(h)
+          self.num_story +=1
+        else:
+          self.story.pop(0)
+          h = self.story[-1]
+          self.story.append(h)
         if "overstrike" in current_tags:
           self.txtarea.tag_remove("overstrike", "sel.first", "sel.last")
-          os = list(self.savedict['overstrike'])
+          os = list(self.story[-1].dict['overstrike'])
           os.remove((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
-          self.savedict['overstrike'] = os
+          self.story[-1].dict['overstrike'] = os
         else:
           self.txtarea.tag_add("overstrike", "sel.first", "sel.last")
           overstrike_font = Font(self.txtarea, self.txtarea.cget("font"))
           overstrike_font.configure(overstrike=1)
           self.txtarea.tag_configure("overstrike", font=overstrike_font)
-          if 'overstrike' in self.savedict:
-            os = list(self.savedict['overstrike'])
+          if 'overstrike' in self.story[-1].dict:
+            os = list(self.story[-1].dict['overstrike'])
             os.remove(['end'])
             os.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
             os.append(['end'])
-            self.savedict['overstrike'] = os
+            self.story[-1].dict['overstrike'] = os
           else:
             os = []
             os.append((self.txtarea.index("sel.first"), self.txtarea.index("sel.last")))
             os.append(['end'])
-            self.savedict['overstrike'] = os
+            self.story[-1].dict['overstrike'] = os
     except TclError:
         pass
   def infoabout(self):  #Справка действие
