@@ -10,6 +10,8 @@ import json
 class Hystory:
   def __init__(self):
     self.dict = {"text" : ""}
+  def get_dict(self):
+    return self.dict
 
 
 class TextEditor:
@@ -18,7 +20,7 @@ class TextEditor:
     self.root.title("Текстовый редактор")
     self.filename = None
     self.title = StringVar()
-    hystory = {"text" : ""}
+    hystory = Hystory()
     self.story = list()
     self.story.append(hystory)
     self.num_story = 1
@@ -95,15 +97,18 @@ class TextEditor:
 
   def changetext(self,*args):
     if self.num_story < 10:
-          h = self.story[-1]
-          self.story.append(h)
+          #h = Hystory()
+          #h.dict = self.story[-1].get_dict()
+          self.story.append(Hystory())
           self.num_story +=1
     else:
           self.story.pop(0)
-          h = self.story[-1]
-          self.story.append(h)
+          #h = Hystory()
+          #h.dict = self.story[-1].get_dict()
+          self.story.append(Hystory())
 
     data = self.txtarea.get("1.0",END)
+    data = data[:-1]
     self.story[-1].dict["text"] = data
   
   def openfile(self,*args): #Функция отркрытия файла
@@ -368,11 +373,13 @@ class TextEditor:
         (rgb, hx) = tkinter.colorchooser.askcolor()
         self.txtarea.tag_add('color', 'sel.first', 'sel.last')
         if self.num_story < 10:
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
           self.num_story +=1
         else:
           self.story.pop(0)
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
         self.story[-1].dict['color'] = hx
@@ -393,11 +400,13 @@ class TextEditor:
   def bg_color(self):
     my_color = tkinter.colorchooser.askcolor()[1]
     if self.num_story < 10:
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
           self.num_story +=1
     else:
           self.story.pop(0)
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
     if my_color:
@@ -407,11 +416,13 @@ class TextEditor:
     try:
         current_tags = self.txtarea.tag_names("sel.first")
         if self.num_story < 10:
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
           self.num_story +=1
         else:
           self.story.pop(0)
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
         if "bold" in current_tags:
@@ -441,11 +452,13 @@ class TextEditor:
     try:
         current_tags = self.txtarea.tag_names("sel.first")
         if self.num_story < 10:
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
           self.num_story +=1
         else:
           self.story.pop(0)
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
         if "italic" in current_tags:
@@ -475,11 +488,13 @@ class TextEditor:
     try:
         current_tags = self.txtarea.tag_names("sel.first")
         if self.num_story < 10:
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
           self.num_story +=1
         else:
           self.story.pop(0)
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
         if "underline" in current_tags:
@@ -509,11 +524,13 @@ class TextEditor:
     try:
         current_tags = self.txtarea.tag_names("sel.first")
         if self.num_story < 10:
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
           self.num_story +=1
         else:
           self.story.pop(0)
+          h = Hystory()
           h = self.story[-1]
           self.story.append(h)
         if "overstrike" in current_tags:
